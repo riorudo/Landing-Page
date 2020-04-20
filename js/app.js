@@ -142,5 +142,3 @@ function scrollTo(event) {
 
 // Set section on active
 window.addEventListener('scroll', setSectionActive);
-
-
