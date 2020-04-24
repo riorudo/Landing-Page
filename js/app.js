@@ -17,8 +17,8 @@
  * Define Global Variables
  *
  */
-const sections = [];
-let offsetTopStart = 0;
+
+let toggledMenu = false;
 
 /**
  * End Global Variables
@@ -26,14 +26,26 @@ let offsetTopStart = 0;
  *
  */
 
+function addClassToElemList(elemList, className) {
+    for (let elem of elemList) {
+        addClassToElem(elem, className);
+    }
+}
+
 function addClassToElem(elem, className) {
-    if (!elem.classList.contains(className)) {
+    if (elem && !elem.classList.contains(className)) {
         elem.classList.add(className);
     }
 }
 
+function removeClassFromElemList(elemList, className) {
+    for (let elem of elemList) {
+        removeClassFromElem(elem, className);
+    }
+}
+
 function removeClassFromElem(elem, className) {
-    if (elem.classList.contains(className)) {
+    if (elem && elem.classList.contains(className)) {
         elem.classList.remove(className);
     }
 }
@@ -54,6 +66,24 @@ function generateSections(numOfSections) {
     mainElem.insertAdjacentHTML("beforeend", templateElemStr);
 }
 
+function getAllSectionsFromHtml() {
+    return document.getElementsByTagName('section');
+}
+
+function toggleMenu() {
+    toggledMenu = !toggledMenu;
+    const toggleMenuItem = document.getElementById('menu__toggle__btn');
+    const menuItems = document.getElementsByClassName('menu__item');
+    if (toggledMenu) {
+        addClassToElem(toggleMenuItem, 'fa-times');
+        removeClassFromElem(toggleMenuItem, 'fa-bars');
+        addClassToElemList(menuItems, 'visible');
+    } else {
+        addClassToElem(toggleMenuItem, 'fa-bars');
+        removeClassFromElem(toggleMenuItem, 'fa-times');
+        removeClassFromElemList(menuItems, 'visible');
+    }
+}
 
 /**
  * End Helper Functions
@@ -64,48 +94,33 @@ function generateSections(numOfSections) {
 // build the nav
 function initNav() {
     const navHtmlItems = [];
-    const sectionsHtml = document.getElementsByTagName('section');
-    const navHtml = document.getElementById('navbar__list');
     const navHtmlFragment = document.createDocumentFragment();
+    const sectionsHtml = getAllSectionsFromHtml();
     for (let sectionHtml of sectionsHtml) {
-        // Create section list with all params
-        const section = {
-            id: sectionHtml.getAttribute('id'),
-            title: sectionHtml.getAttribute('data-nav'),
-            position: sectionHtml.getBoundingClientRect()
-        };
-        sections.push(section);
-
-        // Create menu
-        const navHtmlItem = document.createElement('span');
+        // Fill up menu items
+        const navHtmlItem = document.createElement('a');
+        navHtmlItem.setAttribute('href', '#');
         navHtmlItem.onclick = scrollTo;
-        navHtmlItem.innerText = section.title;
-        navHtmlItem.id = `nav__${section.id}`;
+        navHtmlItem.innerText = sectionHtml.getAttribute('data-nav');
+        navHtmlItem.id = `nav__${sectionHtml.getAttribute('id')}`;
         navHtmlItems.push(navHtmlItem);
-        navHtmlFragment.appendChild(document.createElement('li')).appendChild(navHtmlItem);
+        const navHtmlItemWrapper = document.createElement('li');
+        navHtmlItemWrapper.classList.add('menu__item');
+        navHtmlFragment.appendChild(navHtmlItemWrapper).appendChild(navHtmlItem);
     }
-    navHtml.appendChild(navHtmlFragment);
+    // Append menu items
+    document.getElementById('navbar__list').appendChild(navHtmlFragment);
 }
 
 // Add class 'active' to section when near top of viewport
 function setSectionActive() {
-    // Get current scroll position of the page
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-    // Add hysteresis for different screens sizes to make the selection of the active section smoother
-    let hysteresis = 0;
-    if (window.innerWidth >= 800) {
-        hysteresis = 500;
-    } else {
-        hysteresis = 100;
-    }
-
-    // Check which section is hit by current scrollTop
-    for (let section of sections) {
-        const navElem = document.getElementById(`nav__${section.id}`);
-        const sectionElem = document.getElementById(section.id);
-        const sectionOffset = offsetTopStart + section.position.top;
-        if (scrollTop + hysteresis >= sectionOffset && scrollTop + hysteresis < sectionOffset + section.position.height) {
+    const sectionsHtml = getAllSectionsFromHtml();
+    for (let sectionHtml of sectionsHtml) {
+        const id = sectionHtml.getAttribute('id');
+        const navElem = document.getElementById(`nav__${id}`);
+        const sectionElem = document.getElementById(id);
+        const headerElemHeight = document.getElementById('page__header').getBoundingClientRect().height;
+        if (sectionElem.getBoundingClientRect().top <= headerElemHeight && sectionElem.getBoundingClientRect().top > -sectionElem.getBoundingClientRect().height + headerElemHeight) {
             addClassToElem(sectionElem, 'active-section');
             addClassToElem(navElem, 'active-nav');
         } else {
@@ -123,12 +138,12 @@ generateSections(6);
  * Begin Events
  *
  */
-// Build menu
-initNav();
 
-// Set section on active on page load
+// Use setTimeout to avoid "[Violation] Forced reflow while executing JavaScript" warning in console
 setTimeout(function () {
-    offsetTopStart = window.pageYOffset || document.documentElement.scrollTop;
+    // Build menu
+    initNav();
+    // Set section on active on page load
     setSectionActive();
 }, 0);
 
@@ -137,8 +152,13 @@ function scrollTo(event) {
     event.preventDefault();
     const targetId = event.target.getAttribute('id').replace('nav__', '');
     const elem = document.getElementById(targetId);
-    elem.scrollIntoView({left: 0, block: 'start', behavior: 'smooth'});
+    elem.scrollIntoView({block: 'start', behavior: 'smooth'});
+    if (toggledMenu) {
+        toggleMenu();
+    }
 }
 
-// Set section on active
+// Set section on active on scroll
 window.addEventListener('scroll', setSectionActive);
+// Set section on active on screen resize
+window.addEventListener('resize', setSectionActive);

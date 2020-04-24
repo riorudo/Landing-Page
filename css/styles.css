@@ -64,20 +64,58 @@ section {
     min-height: 80vh;
 }
 
+a {
+    text-decoration: none;
+    color: #111;
+}
 
 /* ---- Module Rules ---- */
 
 /* Navigation Styles*/
+.navbar__menu {
+    height: 52px;
+}
+
 .navbar__menu ul {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
     color: black;
     padding-left: 0;
     margin: 0;
-    text-align: right;
+    min-height: 52px;
 }
 
 .navbar__menu li {
-    display: inline-block;
+    box-sizing: border-box;
+    background-color: white;
+    width: 100%;
+    text-align: center;
     padding: 5px;
+}
+
+.navbar__menu li.menu__item {
+    display: none;
+}
+
+.navbar__menu li.menu__item.visible {
+    display: block;
+}
+
+.navbar__menu li.menu__toggle {
+    padding: 10px;
+    text-align: right;
+    border-bottom: 1px solid #cc1;;
+}
+.navbar__menu li.menu__toggle a {
+    font-size: 1.5em;
+    padding: 5px;
+}
+
+.navbar__menu li.menu__toggle a:focus {
+    outline: none;
 }
 
 .navbar__menu .menu__link {
@@ -123,6 +161,17 @@ section {
 }
 
 @media only screen and (min-width: 35em) {
+    .navbar__menu ul {
+        flex-wrap: nowrap;
+        flex-direction: row;
+    }
+    .navbar__menu li.menu__item {
+        display: block;
+        width: auto;
+    }
+    .navbar__menu li.menu__toggle {
+        display: none;
+    }
     .landing__container {
         max-width: 50em;
         padding: 4em;
@@ -215,7 +264,7 @@ section.active-section .landing__container::after {
 }
 
 .active-nav {
-    color: #444;
+    color: #777;
     text-decoration: underline;
 }
 
